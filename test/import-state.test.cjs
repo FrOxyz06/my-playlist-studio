@@ -1,0 +1,20 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const path=require('node:path');
+const source=fs.readFileSync(path.join(__dirname,'../playlist-studio.js'),'utf8');
+test('clear during asynchronous import cannot restore old history',async()=>{
+ let finishRead;
+ const nodes=new Map();
+ const context={E:require('../playlist-engine.js'),importVersion:0,demo:false,plays:[],seen:new Set(),summary:{tracks:[]},$:id=>{if(!nodes.has(id))nodes.set(id,{});return nodes.get(id);},refresh(){},notify(){}};
+ vm.createContext(context);
+ vm.runInContext(source.slice(source.indexOf('async function importFiles'),source.indexOf("$('files').onchange"))+';globalThis.importHistory=importFiles;',context);
+ const pending=context.importHistory([{name:'history.json',size:100,text:()=>new Promise(resolve=>{finishRead=resolve;})}]);
+ context.importVersion++;
+ finishRead(JSON.stringify([{artistName:'Fictional artist',trackName:'Fictional song',msPlayed:60000,endTime:'2026-01-01 10:00'}]));
+ await pending;
+ assert.equal(context.plays.length,0);
+ assert.equal(context.seen.size,0);
+});

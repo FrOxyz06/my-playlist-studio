@@ -1,0 +1,8 @@
+{
+  "name": "my-playlist-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Spotify listening-history playlist builder",
+  "scripts": { "start": "node studio-server.cjs", "test": "node --test test/*.test.cjs" },
+  "engines": { "node": ">=22" }
+}

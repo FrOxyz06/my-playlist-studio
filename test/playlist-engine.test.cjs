@@ -1,0 +1,11 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),E=require('../playlist-engine.js');
+const records=[{artistName:'A',trackName:'One',msPlayed:60000,endTime:'2026-01-01 10:00'},{artistName:'A',trackName:'Two',msPlayed:60000,endTime:'2026-03-01 10:00'},{artistName:'B',trackName:'Three',msPlayed:60000,endTime:'2026-03-03 10:00'},{artistName:'B',trackName:'Skipped',msPlayed:1000,endTime:'2026-03-03 11:00'}];
+const summary=E.summarize(E.parse(records));
+test('artist mode uses requested artist and ignores per-artist cap',()=>{const list=E.build(summary,{direction:'artist',artist:'a',cap:1,random:()=>.5});assert.equal(list.length,2);assert.ok(list.every(t=>t.artist==='A'));});
+test('genre uses assigned labels, includes no unlabeled artist',()=>{const list=E.build(summary,{direction:'genre',genre:'ROCK',labels:{a:['rock']},random:()=>.5});assert.equal(list.length,2);assert.ok(list.every(t=>t.artist==='A'));assert.equal(E.build(summary,{direction:'genre',genre:'jazz'}).length,0);});
+test('artist limits, count limits, and exclusions hold',()=>{assert.equal(E.build(summary,{cap:1}).length,2);assert.equal(E.build(summary,{count:1}).length,1);assert.ok(E.build(summary,{excluded:['a\0one']}).every(t=>t.title!=='One'));assert.ok(E.build(summary).every(t=>t.title!=='Skipped'));});
+test('recent and rediscovery prioritize different history',()=>{assert.equal(E.build(summary,{mix:'recent',random:()=>.5})[0].title,'Three');assert.equal(E.build(summary,{mix:'rediscover',random:()=>.5})[0].title,'One');});
+test('extended Spotify records preserve URI and ignore nonmusic',()=>{const result=E.parse([{master_metadata_track_name:'Track',master_metadata_album_artist_name:'Artist',ms_played:45000,ts:'2026-01-01T00:00:00Z',spotify_track_uri:'spotify:track:'+'a'.repeat(22)},{master_metadata_track_name:null}]);assert.equal(result.length,1);assert.match(E.url(result[0]),/\/track\/a{22}$/);});
+test('CSV protects formula-like values and quoted names',()=>{const csv=E.csv([{title:'=formula',artist:'A "B"',reason:'test',uri:null}]);assert.ok(csv.includes("'=formula"));assert.ok(csv.includes('A ""B""'));});
+
+test('fractional song and artist limits are rounded down',()=>{assert.equal(E.build(summary,{count:1.5}).length,1);assert.equal(E.build(summary,{cap:1.5}).length,2);});
