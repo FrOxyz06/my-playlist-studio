@@ -1,8 +1,67 @@
 {
   "name": "my-playlist-studio",
-  "version": "1.0.0",
+  "version": "1.0.8",
   "private": true,
   "description": "Local Spotify listening-history playlist builder",
-  "scripts": { "start": "node studio-server.cjs", "test": "node --test test/*.test.cjs" },
-  "engines": { "node": ">=22" }
+  "scripts": {
+    "start": "node studio-server.cjs",
+    "test": "node --test test/*.test.cjs",
+    "desktop": "electron .",
+    "dist:win": "electron-builder --win nsis --x64 --publish never"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "desktop/main.cjs",
+  "author": "Mohamed El Mounir",
+  "build": {
+    "appId": "com.froxyz.playliststudio",
+    "productName": "Playlist Studio",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**",
+      "My Playlist Studio.html",
+      "playlist-*.js",
+      "playlist-studio.css",
+      "spotify-*.js",
+      "studio-polish.js",
+      "studio-server.cjs",
+      "package.json",
+      "lastfm-settings.cjs"
+    ],
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "npmRebuild": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "FrOxyz06",
+        "repo": "my-playlist-studio",
+        "releaseType": "draft"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FrOxyz06/my-playlist-studio.git"
+  }
 }

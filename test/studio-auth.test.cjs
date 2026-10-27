@@ -33,3 +33,9 @@ test('invalid pending timestamp never exchanges an OAuth code',async()=>{
  c.location.pathname='/callback';c.location.search='?code=test&state='+pending.state;
  await assert.rejects(api.finish(),/verified/);assert.equal(requests.length,0);
 });
+
+test('desktop restores a session without putting tokens in browser storage',async()=>{const {context:c,api}=setup();c.studioDesktop={loadSession:async()=>({access_token:'saved',refresh_token:'refresh',expires:Date.now()+3600000,authorizedAt:Date.now(),scope:'playlist-modify-private'}),clearSession:async()=>{}};await api.finish();assert.equal(api.connected(),true);assert.equal(c.sessionStorage.getItem('playlist-studio-spotify'),null);});
+test('desktop expires the sign-in after thirty days',async()=>{const {context:c,api}=setup();let cleared=false;c.studioDesktop={loadSession:async()=>({access_token:'old',refresh_token:'refresh',authorizedAt:Date.now()-31*86400000}),clearSession:async()=>{cleared=true;}};await api.finish();assert.equal(api.connected(),false);assert.equal(cleared,true);});
+test('desktop refresh preserves original authorization timestamp',async()=>{const {context:c,api}=setup();const authorizedAt=Date.now()-86400000;let saved;c.studioDesktop={loadSession:async()=>({access_token:'old',refresh_token:'refresh',expires:0,authorizedAt,scope:'playlist-modify-private'}),saveSession:async data=>{saved=data;},clearSession:async()=>{}};await api.finish();await api.api('/me');assert.equal(saved.authorizedAt,authorizedAt);});
+
+test('default sign-in opens Spotify without manual developer setup',async()=>{const {context:c,api}=setup();await api.connect();const url=new URL(c.location.assigned);assert.equal(url.origin,'https://accounts.spotify.com');assert.match(url.searchParams.get('client_id'),/^[a-f0-9]{32}$/);assert.equal(url.searchParams.get('response_type'),'code');});

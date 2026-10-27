@@ -6,12 +6,12 @@
  function rememberSelection(){sessionStorage.setItem(pendingKey,JSON.stringify({tracks:playlist,name:$('name').value,demo}));}
  $('client-id').value=S.client();
  $('connect-spotify').onclick=async()=>{try{rememberSelection();await S.connect($('client-id').value.trim());}catch(e){status.textContent=e.message;}};
- $('disconnect-spotify').onclick=()=>{S.disconnect();sessionStorage.removeItem(pendingKey);sessionStorage.removeItem(savedKey);status.textContent='Disconnected. Local playlist generation still works.';update();};
+ $('disconnect-spotify').onclick=()=>{S.disconnect();window.studioProfile=null;window.dispatchEvent(new Event('studio-profile'));sessionStorage.removeItem(pendingKey);sessionStorage.removeItem(savedKey);status.textContent='Disconnected. Local playlist generation still works.';update();};
  $('clear').addEventListener('click',()=>{sessionStorage.removeItem(pendingKey);sessionStorage.removeItem(savedKey);});
  save.onclick=async()=>{
   if(saving)return;
   if(!playlist.length||demo){status.textContent='Make a playlist from your own history first.';return;}
-  if(!S.connected()){status.textContent='Connect Spotify above first. Your selected playlist will be restored after sign-in; reimport history to generate more.';$('client-id').focus();return;}
+  if(!S.connected()){status.textContent='Sign in with Spotify to save your mix.';if(!$('connection').open)$('connection').showModal();$('connect-spotify').focus();return;}
   if(!S.canSave()){status.textContent='Reconnect to grant private playlist permission.';return;}
   saving=true;update();let saved=null;
   try{
@@ -30,7 +30,7 @@
   }catch(e){status.textContent=e.message+(saved&&!saved.complete?' Your playlist exists; click Save again to finish without duplicating songs.':'');}finally{saving=false;update();}
  };
  S.finish().then(async()=>{
-  if(S.connected()){await S.api('/me');status.textContent='Connected. Make a playlist, then click Save to Spotify.';try{const pending=JSON.parse(sessionStorage.getItem(pendingKey));if(pending?.tracks?.length){playlist=pending.tracks;demo=!!pending.demo;$('name').value=pending.name||'My next rotation';render();notify('Your selected playlist is restored. Reimport history to generate additional mixes.');}}catch{}}
+  if(S.connected()){window.studioProfile=await S.api('/me');window.dispatchEvent(new Event('studio-profile'));status.textContent='Connected. Make a playlist, then click Save to Spotify.';try{const pending=JSON.parse(sessionStorage.getItem(pendingKey));if(pending?.tracks?.length){playlist=pending.tracks;demo=!!pending.demo;$('name').value=pending.name||'My next rotation';render();notify('Your selected playlist is restored. Reimport history to generate additional mixes.');}}catch{}}
   else status.textContent=location.protocol==='file:'?'For Spotify saving, run Start Playlist Studio.cmd and open http://127.0.0.1:8791. Offline features still work here.':'Connect Spotify to enable direct saving.';update();
  }).catch(e=>{status.textContent=e.message;update();});
  update();
