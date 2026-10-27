@@ -1,0 +1,17 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{EventEmitter}=require('node:events');
+const {setupUpdates}=require('../desktop/updates.cjs');
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+function setup(responses=[]){
+ const updater=new EventEmitter();updater.currentVersion={version:'1.0.8'};updater.checks=0;updater.downloads=0;updater.installs=0;
+ updater.checkForUpdates=async()=>{updater.checks++;return {updateInfo:{version:'1.0.8'}};};
+ updater.downloadUpdate=async()=>{updater.downloads++;updater.emit('update-downloaded',{});};updater.quitAndInstall=()=>updater.installs++;
+ const messages=[];const options={updater,dialog:{showMessageBox:async(_window,info)=>{messages.push(info);return {response:responses.shift()??1};}},getWindow:()=>({isDestroyed:()=>false}),log:{warn(){}},enabled:true};
+ return {updater,messages,options};
+}
+test('desktop entry points parse before packaging',()=>{const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');for(const file of ['main.cjs','preload.cjs','updates.cjs'])new vm.Script(fs.readFileSync(path.join(__dirname,'../desktop',file),'utf8'),{filename:file});});
+test('updater never downloads or installs without consent',async()=>{const {updater,messages,options}=setup([1]);setupUpdates(options);updater.emit('update-available',{version:'1.0.9'});await tick();assert.equal(updater.downloads,0);assert.equal(updater.installs,0);assert.equal(updater.autoInstallOnAppQuit,false);assert.equal(updater.autoDownload,false);assert.equal(messages.length,1);});
+test('download then restart installs only after both confirmations',async()=>{const {updater,messages,options}=setup([0,0]);setupUpdates(options);updater.emit('update-available',{version:'1.0.9'});await tick();assert.equal(updater.downloads,1);assert.equal(updater.installs,1);assert.equal(messages.length,2);});
+test('later preserves downloaded update for manual install',async()=>{const {updater,options}=setup([0,1,0]);const controller=setupUpdates(options);updater.emit('update-available',{version:'1.0.9'});await tick();assert.equal(updater.installs,0);await controller.check(true);assert.equal(updater.installs,1);assert.equal(updater.downloads,1);});
+test('manual check reports latest version; development never contacts feed',async()=>{const {updater,messages,options}=setup();await setupUpdates(options).check(true);assert.equal(updater.checks,1);assert.equal(messages[0].title,'Up to date');options.enabled=false;await setupUpdates(options).check(true);assert.equal(updater.checks,1);assert.equal(messages[1].title,'App updates');});
+test('failed checks are contained and concurrent checks are deduplicated',async()=>{const {updater,messages,options}=setup();let reject;updater.checkForUpdates=()=>new Promise((_resolve,fail)=>{reject=fail;updater.checks++;});const controller=setupUpdates(options);const first=controller.check(true);await controller.check(true);reject(Error('network'));await first;assert.equal(updater.checks,1);assert.equal(messages[0].title,'Updates unavailable');});
+test('failed download does not trigger installation',async()=>{const {updater,messages,options}=setup([0]);updater.downloadUpdate=async()=>{throw Error('network');};setupUpdates(options);updater.emit('update-available',{version:'1.0.9'});await tick();assert.equal(updater.installs,0);assert.equal(messages[1].title,'Updates unavailable');});

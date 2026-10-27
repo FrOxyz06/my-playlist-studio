@@ -10,3 +10,9 @@ my-genre-labels.json
 *.log
 .DS_Store
 Thumbs.db
+
+lastfm.local.json
+
+dist/
+
+node-compile-cache/
