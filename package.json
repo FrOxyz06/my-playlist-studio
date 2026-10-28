@@ -1,6 +1,6 @@
 {
   "name": "my-playlist-studio",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "private": true,
   "description": "Local Spotify listening-history playlist builder",
   "scripts": {
@@ -48,7 +48,7 @@
         "provider": "github",
         "owner": "FrOxyz06",
         "repo": "my-playlist-studio",
-        "releaseType": "draft"
+        "releaseType": "release"
       }
     ]
   },

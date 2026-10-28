@@ -3,7 +3,7 @@ const http=require('node:http'),fs=require('node:fs/promises'),path=require('nod
 const host='127.0.0.1',port=8791;
 const files={'/studio-polish.js':'studio-polish.js','/':'My Playlist Studio.html','/callback':'My Playlist Studio.html','/playlist-studio.css':'playlist-studio.css','/playlist-engine.js':'playlist-engine.js','/playlist-studio.js':'playlist-studio.js','/spotify-auth.js':'spotify-auth.js','/spotify-save.js':'spotify-save.js'};
 const server=http.createServer(async(req,res)=>{
- const headers={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://accounts.spotify.com https://api.spotify.com; img-src 'self' https://i.scdn.co; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"};
+ const headers={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://accounts.spotify.com https://api.spotify.com; img-src 'self' https://i.scdn.co https://profile-images.scdn.co; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"};
  if(req.headers.host!==host+':'+port){res.writeHead(403,headers);return res.end('Use http://127.0.0.1:8791');}
  if(new URL(req.url,'http://'+host+':'+port).pathname==='/api/lastfm-settings')return require('./lastfm-settings.cjs').handleSettings(req,res,headers,process.env.PLAYLIST_STUDIO_CONFIG||path.join(__dirname,'lastfm.local.json'));
  if(req.method!=='GET'){res.writeHead(405,headers);return res.end();}

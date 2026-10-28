@@ -19,6 +19,13 @@ if(!app.isPackaged)try{await fs.copyFile(path.join(__dirname,'../lastfm.local.js
 ipcMain.handle('chrome:appearance',(event,appearance)=>{trusted(event);if(appearance!=='dark'&&appearance!=='light')throw Error('Invalid appearance.');window.setTitleBarOverlay({color:appearance==='dark'?'#172124':'#f3f5f5',symbolColor:appearance==='dark'?'#d4e1dc':'#263d37',height:56});});
 ipcMain.handle('session:load',event=>{trusted(event);return queue(async()=>{try{const saved=JSON.parse(safeStorage.decryptString(await fs.readFile(vault)));if(!Number.isFinite(saved.authorizedAt)||Date.now()-saved.authorizedAt>=month||saved.authorizedAt>Date.now()){await fs.rm(vault,{force:true});return null;}return saved;}catch{return null;}});});
 ipcMain.handle('session:save',(event,saved)=>{trusted(event);return queue(async()=>{if(!safeStorage.isEncryptionAvailable())throw Error('Windows secure storage is unavailable.');if(!saved||typeof saved.access_token!=='string'||typeof saved.refresh_token!=='string'||!Number.isFinite(saved.authorizedAt)||Date.now()-saved.authorizedAt>=month||saved.authorizedAt>Date.now())throw Error('Reconnect Spotify to save this session.');const temporary=vault+'.tmp';await fs.writeFile(temporary,safeStorage.encryptString(JSON.stringify(saved)));await fs.rename(temporary,vault);});});
+const accountsVault=path.join(data,'spotify-accounts.bin');
+ipcMain.handle('accounts:load',event=>{trusted(event);return queue(async()=>{try{return JSON.parse(safeStorage.decryptString(await fs.readFile(accountsVault)));}catch(error){if(error.code==='ENOENT')return [];throw Error('Could not read saved accounts.');}});});
+ipcMain.handle('accounts:save',(event,list)=>{trusted(event);return queue(async()=>{
+ if(!safeStorage.isEncryptionAvailable())throw Error('Windows secure storage is unavailable.');
+ if(!Array.isArray(list)||list.length>10||JSON.stringify(list).length>200000||list.some(a=>typeof a?.profile?.id!=='string'||!a.profile.id||typeof a.clientId!=='string'||!a.session||typeof a.session.access_token!=='string'||typeof a.session.refresh_token!=='string'||!Number.isFinite(a.session.authorizedAt)))throw Error('Invalid saved accounts.');
+ const temporary=accountsVault+'.tmp';await fs.writeFile(temporary,safeStorage.encryptString(JSON.stringify(list)));await fs.rename(temporary,accountsVault);
+});});
 ipcMain.handle('session:clear',event=>{trusted(event);return queue(()=>fs.rm(vault,{force:true}));});
 server=require('../studio-server.cjs').server;server.desktopMode=true;
 await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(8791,'127.0.0.1',resolve);});
