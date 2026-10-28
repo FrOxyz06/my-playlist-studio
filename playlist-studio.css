@@ -567,3 +567,7 @@ html,body,.rail,.listening-desk,.turntable,.mix-option,.primary,.secondary,.conn
 .app-header .connection-chip:not(.has-profile) .connection-dot{display:none}
 .app-header .connection-chip:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 @media(max-width:650px){.app-header .connection-chip #connection-label{max-width:110px}.app-header .connection-chip,.desktop-app .desktop-chrome .connection-chip{gap:7px}}
+
+.update-indicator{position:relative;display:grid;place-items:center;width:34px;height:34px;min-height:34px;flex:0 0 34px;padding:7px;border:0;border-radius:9px;background:var(--accent-soft);color:var(--accent);cursor:pointer;-webkit-app-region:no-drag}
+.update-indicator svg{width:18px;height:18px}.update-indicator:after{content:'';position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.update-indicator:hover{filter:brightness(.95)}

@@ -37,9 +37,10 @@ window.webContents.on('will-navigate',(event,url)=>{if(new URL(url).origin!==ori
 window.webContents.session.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));
 server.on('desktop-callback',url=>{if(window&&!window.isDestroyed()){window.loadURL(origin+'/'+new URL(url,origin).search);window.show();window.focus();}});
 Menu.setApplicationMenu(null);
-const updates=require('./updates.cjs').setupUpdates({updater:require('electron-updater').autoUpdater,dialog,getWindow:()=>window,log,enabled:app.isPackaged});
+const updates=require('./updates.cjs').setupUpdates({updater:require('electron-updater').autoUpdater,dialog,getWindow:()=>window,log,enabled:app.isPackaged,silentStartup:true});
+ipcMain.handle('updates:status',event=>{trusted(event);return updates.status();});
 ipcMain.handle('updates:check',event=>{trusted(event);return updates.check(true);});
 await window.loadURL(origin+'/');window.show();window.focus();log.info('Workspace loaded');
-const updateTimer=setTimeout(()=>updates.check(false),8000);updateTimer.unref();
+const updateTimer=setTimeout(()=>updates.check(false),8000);updateTimer.unref();const updateInterval=setInterval(()=>updates.check(false),6*60*60*1000);updateInterval.unref();
 }
 app.on('window-all-closed',()=>app.quit());app.on('before-quit',()=>{if(server?.listening)server.close();});

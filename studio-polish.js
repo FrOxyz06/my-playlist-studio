@@ -574,7 +574,7 @@ document.getElementById('recent-pick-first')?.addEventListener('click',()=>docum
 
 
 
-(()=>{const panel=$('lastfm-settings'),key=$('lastfm-key'),feedback=$('lastfm-feedback'),save=$('lastfm-save'),show=$('lastfm-show');document.querySelectorAll('a[href="#lastfm-settings"]').forEach(link=>link.addEventListener('click',async event=>{event.preventDefault();panel.showModal();feedback.textContent='Checking connection settingsâ€¦';try{const response=await fetch('/api/lastfm-settings');if(!response.ok)throw Error();const data=await response.json();feedback.textContent=data.configured?'An API key is saved. Paste a new key only to replace it.':'No API key saved yet.';}catch{feedback.textContent='Could not load settings. Restart the app and try again.';}}));$('lastfm-close').onclick=()=>panel.close();panel.addEventListener('close',()=>{key.value='';key.type='password';show.textContent='Show';show.setAttribute('aria-label','Show API key');show.setAttribute('aria-pressed','false');});show.onclick=()=>{const visible=key.type==='password';key.type=visible?'text':'password';show.textContent=visible?'Hide':'Show';show.setAttribute('aria-label',visible?'Hide API key':'Show API key');show.setAttribute('aria-pressed',String(visible));};$('lastfm-form').addEventListener('submit',async event=>{event.preventDefault();save.disabled=true;feedback.textContent='Checking your key with Last.fmâ€¦';try{const response=await fetch('/api/lastfm-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey:key.value.trim()})});const data=await response.json();if(!response.ok)throw Error(data.error||'Could not save the key.');key.value='';feedback.textContent='Connected to Last.fm. Your key is saved.';}catch(error){feedback.textContent=error.message;}finally{save.disabled=false;}});})();
+(()=>{const panel=$('lastfm-settings'),key=$('lastfm-key'),feedback=$('lastfm-feedback'),save=$('lastfm-save'),show=$('lastfm-show');document.querySelectorAll('a[href="#lastfm-settings"]').forEach(link=>link.addEventListener('click',async event=>{event.preventDefault();panel.showModal();feedback.textContent='Checking connection settingsâ€¦';try{const response=await fetch('/api/lastfm-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'read-saved'})});if(!response.ok)throw Error();const data=await response.json();if(!panel.open)return;key.value=data.apiKey||'';key.type='password';feedback.textContent=data.apiKey?'Your saved key is connected. Use Show to reveal it.':'No API key saved yet.';}catch{feedback.textContent='Could not load settings. Restart the app and try again.';}}));$('lastfm-close').onclick=()=>panel.close();panel.addEventListener('close',()=>{key.value='';key.type='password';show.textContent='Show';show.setAttribute('aria-label','Show API key');show.setAttribute('aria-pressed','false');});show.onclick=()=>{const visible=key.type==='password';key.type=visible?'text':'password';show.textContent=visible?'Hide':'Show';show.setAttribute('aria-label',visible?'Hide API key':'Show API key');show.setAttribute('aria-pressed',String(visible));};$('lastfm-form').addEventListener('submit',async event=>{event.preventDefault();save.disabled=true;feedback.textContent='Checking your key with Last.fmâ€¦';try{const response=await fetch('/api/lastfm-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey:key.value.trim()})});const data=await response.json();if(!response.ok)throw Error(data.error||'Could not save the key.');key.type='password';show.textContent='Show';show.setAttribute('aria-pressed','false');show.setAttribute('aria-label','Show API key');feedback.textContent='Connected to Last.fm. Your saved key is shown above.';}catch(error){feedback.textContent=error.message;}finally{save.disabled=false;}});})();
 
 
 
@@ -641,18 +641,13 @@ if(globalThis.studioDesktop){
 
 
 
-// Desktop-only update action. Credentials and update URLs stay in the main process.
-
-if(globalThis.studioDesktop?.checkForUpdates){
-
- const link=document.querySelector('a[href="#lastfm-settings"]');
-
- const button=document.createElement('button');button.type='button';button.className='desktop-update-action';button.textContent='Check for updates';
-
- button.addEventListener('click',async()=>{button.disabled=true;try{await globalThis.studioDesktop.checkForUpdates();}finally{button.disabled=false;}});
-
- link?.parentElement.append(button);
-
+// Update indicator is visible only when a release is available.
+if(globalThis.studioDesktop?.getUpdateStatus){
+ const button=document.createElement('button');button.type='button';button.className='update-indicator';button.hidden=true;
+ const glyph=document.createElementNS('http://www.w3.org/2000/svg','svg');glyph.setAttribute('viewBox','0 0 24 24');glyph.setAttribute('fill','none');glyph.setAttribute('stroke','currentColor');glyph.setAttribute('stroke-width','1.7');glyph.setAttribute('stroke-linecap','round');glyph.setAttribute('stroke-linejoin','round');glyph.setAttribute('aria-hidden','true');glyph.innerHTML='<path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/>';button.append(glyph);
+ document.querySelector('.app-header')?.insertBefore(button,document.querySelector('.connection-chip'));
+ async function sync(){try{const state=await globalThis.studioDesktop.getUpdateStatus();button.hidden=!state.available;button.disabled=state.downloading;button.title=state.ready?'Restart to install update':state.downloading?'Downloading update':'Update '+state.version+' available';button.setAttribute('aria-label',button.title);}catch{button.hidden=true;}}
+ button.addEventListener('click',async()=>{try{await globalThis.studioDesktop.checkForUpdates();}finally{sync();}});sync();setInterval(sync,10000);
 }
 
 // Connected identity and saved accounts; no token data is rendered into the DOM.

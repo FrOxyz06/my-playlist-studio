@@ -115,3 +115,6 @@ Release process: commit the tested source, increase package.json and package-loc
 Version 1.0.9 restores the original sidebar layout with compact-window adjustments, cover-led suggestions, SVG theme controls, and a compact account trigger. The account dialog supports adding, switching and removing up to ten Spotify accounts. Desktop accounts are encrypted separately from the active session; browser accounts remain in sessionStorage for that tab. Switching verifies Spotify identity and requires reconnecting after thirty days. Existing imported history remains device-wide, not separate per account. Live multi-account sign-in and visual resize checks still need verification.
 
 Release workflow: an explicit [release] commit on main, a matching version tag, or manual dispatch now builds and publishes a release after npm ci and all tests succeed. Ordinary commits do not publish. Versions must be increased before releasing.
+
+
+Version 1.0.10 replaces the manual update link with a header indicator visible only when an update is available. Startup checks and six-hour checks are silent; downloading and installing still require explicit approval. Last.fm settings now loads the saved key into a password field; Show reveals it through a same-origin JSON request. Ordinary GET status responses still never include credentials.

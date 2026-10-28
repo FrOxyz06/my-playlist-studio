@@ -7,7 +7,7 @@ async function handleSettings(req,res,headers,configPath,request=fetch){
  if(req.method!=='POST')return reply(405,{error:'Method not allowed.'});
  if(req.headers.origin!=='http://127.0.0.1:8791'||req.headers['content-type']!=='application/json')return reply(403,{error:'Open settings from Playlist Studio.'});
  let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>1024)return reply(413,{error:'Request too large.'});}
- let apiKey;try{apiKey=JSON.parse(body).apiKey?.trim();}catch{return reply(400,{error:'Invalid settings.'});}
+ let apiKey;try{const input=JSON.parse(body);if(input.action==='read-saved'){try{const saved=JSON.parse(await fs.readFile(configPath,'utf8'));return reply(200,{apiKey:valid(saved.apiKey)?saved.apiKey:null});}catch{return reply(200,{apiKey:null});}}apiKey=input.apiKey?.trim();}catch{return reply(400,{error:'Invalid settings.'});}
  if(!valid(apiKey))return reply(400,{error:'Enter a 32-character Last.fm API key.'});
  try{const response=await request('https://ws.audioscrobbler.com/2.0/?'+new URLSearchParams({method:'chart.getTopTracks',api_key:apiKey,format:'json',limit:'1'}),{signal:AbortSignal.timeout(15000)});const data=await response.json();if(!response.ok||data.error||!data.tracks)return reply(400,{error:'Last.fm could not verify this key. Check the key and try again.'});
  const temp=configPath+'.tmp';await fs.writeFile(temp,JSON.stringify({apiKey}),{mode:0o600});await fs.rename(temp,configPath);return reply(200,{configured:true});
