@@ -70,5 +70,14 @@ function selectSimilar(tracks,{count=25,recent=[],random=Math.random}={}){
  }
  return result;
 }
-const api={parse,summarize,build,fromCollection,similarPool,selectSimilar,url,csv,norm};if(typeof module!=='undefined')module.exports=api;else root.StudioEngine=api;
+function includeSeed(tracks,seed,{count=25}={}){
+ count=Math.max(1,Math.min(100,Math.floor(Number(count)||25)));
+ if(!seed?.title||!seed?.artist)return tracks.slice(0,count);
+ const artists=new Set([seed.artist,...(seed.artists||[])].map(norm));
+ const same=t=>(seed.uri&&t.uri===seed.uri)||(norm(t.title)===norm(seed.title)&&artists.has(norm(t.artist)));
+ const existing=tracks.find(same);
+ const first={...existing,...seed,key:songKey(seed),reason:'Your starting song',isSeed:true};
+ return [first,...tracks.filter(t=>!same(t))].slice(0,count);
+}
+const api={parse,summarize,build,fromCollection,similarPool,selectSimilar,includeSeed,url,csv,norm};if(typeof module!=='undefined')module.exports=api;else root.StudioEngine=api;
 })(globalThis);

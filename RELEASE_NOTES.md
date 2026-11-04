@@ -1,9 +1,9 @@
-## Playlist Studio 1.0.15
+## Playlist Studio 1.0.16
 
-- A themed update dialog replaces the plain Windows update popup.
-- Download progress and version details are shown inside the app.
-- Choose Later, keep using Studio while downloading, or Restart & update when ready.
-- Restart is disabled while playlist saves, YouTube actions, imports, or account switches are running.
-- Escape and closing the dialog defer installation; updates never install on ordinary app exit.
+- Rebuilt the front end with one shared light/dark visual system for the workspace, navigation, controls, song picker, and dialogs.
+- Cleaner playlist rows, consistent form sizing, quieter separators, and organized Spotify/YouTube save actions.
+- History-only controls are hidden in discovery mode, and help text reflects the selected music source.
+- The starting song is now first in generated playlists, included exactly once, and counted toward the chosen playlist length.
+- Single-song playlists include the chosen starting song without making recommendation requests.
 
-The new dialog is available after installing 1.0.15. Updating from an older version still uses that version's existing popup.
+Desktop visual review was unavailable during development. Markup/resource checks and automated interaction tests were performed.

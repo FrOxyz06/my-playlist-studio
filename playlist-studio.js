@@ -3,7 +3,7 @@ const E=StudioEngine,$=id=>document.getElementById(id);
 let plays=[],summary=E.summarize([]),playlist=[],labels=Object.create(null),excluded=[],demo=false,importVersion=0;
 const seen=new Set();
 function notify(s){$('status').textContent=s;}
-function clearResults(){playlist=[];excluded=[];$('tracks').replaceChildren();$('exports').hidden=true;$('empty').hidden=false;$('badge').textContent='READY WHEN YOU ARE';}
+function clearResults(){playlist=[];excluded=[];$('tracks').replaceChildren();$('exports').hidden=true;$('empty').hidden=false;$('badge').textContent='Ready to build';}
 function refresh(){summary=E.summarize(plays);persistHistory();$('make').disabled=!summary.tracks.some(t=>t.qualified);$('stats').textContent=(demo?'SAMPLE MUSIC · ':'')+summary.plays.toLocaleString()+' plays · '+summary.tracks.length.toLocaleString()+' songs · '+new Set(summary.tracks.map(t=>E.norm(t.artist))).size+' artists';$('artists').replaceChildren();for(const a of artists()){const option=document.createElement('option');option.value=a.artist;$('artists').append(option);}renderLabels();clearResults();}
 function artists(){const map=new Map();for(const t of summary.tracks){const k=E.norm(t.artist),a=map.get(k)||{artist:t.artist,count:0};a.count+=t.qualified;map.set(k,a);}return [...map.values()].sort((a,b)=>b.count-a.count||a.artist.localeCompare(b.artist));}
 function updateGenres(){const old=$('genre').value,genres=[...new Set(Object.values(labels).flat())].sort();$('genre').replaceChildren();for(const g of genres.length?genres:['']){const o=document.createElement('option');o.value=g;o.textContent=g||'Label artists below first';$('genre').append(o);}if(genres.includes(old))$('genre').value=old;}

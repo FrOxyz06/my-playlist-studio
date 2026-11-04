@@ -1,7 +1,7 @@
 'use strict';
 (()=>{
- const button=document.createElement('button');button.type='button';button.className='secondary youtube-launch';button.textContent='Convert to YouTube';document.getElementById('save-spotify').after(button);
- const nav=document.createElement('button');nav.type='button';nav.className='nav-item youtube-nav';nav.textContent='YouTube transfer';document.querySelector('.rail nav').append(nav);
+ const button=document.createElement('button');button.type='button';button.className='secondary youtube-launch';button.textContent='Save to YouTube';document.getElementById('save-spotify').after(button);
+ const nav=document.createElement('button');nav.type='button';nav.className='nav-item youtube-nav';nav.innerHTML='<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="m10 9 5 3-5 3Z"/></svg><span>YouTube transfer</span>' ;document.querySelector('.rail nav').append(nav);
  const dialog=document.createElement('dialog');dialog.className='youtube-dialog';dialog.setAttribute('aria-labelledby','youtube-title');
  dialog.innerHTML=`<div class="youtube-heading"><div><h2 id="youtube-title">Take your playlist to YouTube</h2><p>Match songs, review the versions, then save to your channel.</p></div><button type="button" class="secondary" id="youtube-close">Close</button></div>
  <p id="youtube-account" class="field-help">Checking YouTube connection.</p>

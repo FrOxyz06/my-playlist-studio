@@ -140,3 +140,7 @@ Documentation: https://developers.google.com/identity/protocols/oauth2/native-ap
 
 ### Update dialog (1.0.15)
 Update confirmations now use a themed dialog inside Playlist Studio, with a version badge, download progress, Later, and Restart & update actions. Downloads and installation still require separate explicit clicks. Escape defers the action. Restart is disabled during Spotify saves, YouTube actions, history imports, and account switches. Closing the window, navigating, or allowing a prompt to expire declines the pending action. The updater keeps installation disabled on ordinary app exit. The new dialog becomes available after installing 1.0.15; the update from an older version uses that older version’s prompt.
+
+
+### Frontend and starting song (1.0.16)
+The workspace, navigation, controls, picker, dialogs, and playlist rows share a consolidated light/dark stylesheet. Save actions are grouped separately from exports, and discovery hides irrelevant history controls. Generated playlists place the chosen starting song first, remove duplicate copies, and count it toward the requested length. A requested length of one returns only the starting song without querying recommendation services. Shared playlist imports keep their original order. Desktop visual review was unavailable; markup, resource, and automated behavior checks were performed.
