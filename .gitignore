@@ -16,3 +16,9 @@ lastfm.local.json
 dist/
 
 node-compile-cache/
+
+# Google OAuth downloads and local playlist-sharing exports
+client_secret*.json
+youtube-client*.json
+youtube-client*.bin
+*.playlist.json

@@ -571,3 +571,33 @@ html,body,.rail,.listening-desk,.turntable,.mix-option,.primary,.secondary,.conn
 .update-indicator{position:relative;display:grid;place-items:center;width:34px;height:34px;min-height:34px;flex:0 0 34px;padding:7px;border:0;border-radius:9px;background:var(--accent-soft);color:var(--accent);cursor:pointer;-webkit-app-region:no-drag}
 .update-indicator svg{width:18px;height:18px}.update-indicator:after{content:'';position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
 .update-indicator:hover{filter:brightness(.95)}
+
+/* Window toolbar: stable search, quiet identity, native caption clearance. */
+.desktop-app .desktop-chrome{display:grid;grid-template-columns:minmax(200px,1fr) minmax(180px,360px) minmax(150px,1fr);gap:20px;padding:0 154px 0 18px;height:48px;border-bottom:1px solid var(--line);box-shadow:none;font-family:"Segoe UI Variable","Segoe UI",sans-serif}
+.desktop-app .desktop-wordmark{min-width:0;gap:9px;font-size:12px;white-space:nowrap}
+.desktop-app .desktop-mark{width:20px;height:20px;flex-shrink:0;opacity:.9}
+.desktop-context{border-left:1px solid var(--line);padding-left:12px;margin-left:4px;color:var(--muted);font-weight:400;font-size:11px}
+.desktop-app .desktop-song-search{display:flex;align-items:center;gap:9px;width:100%;height:30px;min-height:30px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--canvas);color:var(--muted);text-align:left;font-size:12px;font-weight:400;-webkit-app-region:no-drag;app-region:no-drag;box-shadow:0 1px 2px #00000004}
+.desktop-song-search span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.desktop-song-search svg{flex-shrink:0}
+.desktop-song-search kbd{font:10px "Segoe UI",sans-serif;padding:1px 4px;border:1px solid var(--line);border-radius:3px;color:var(--muted);white-space:nowrap}
+.desktop-app .desktop-song-search:hover{border-color:var(--muted);background:var(--accent-soft);color:var(--ink)}
+.desktop-app .desktop-chrome .app-header{width:100%;gap:6px;justify-content:flex-end;min-width:0}
+.desktop-app .desktop-chrome .connection-chip{max-width:180px;height:30px;min-height:30px}
+.desktop-app .desktop-chrome .account-provider{display:none}
+.desktop-app .desktop-chrome .account-identity{min-width:0}
+.desktop-app .desktop-chrome #connection-label{max-width:110px;font-size:11px;white-space:nowrap}
+.desktop-app .desktop-chrome .spotify-avatar{width:24px;height:24px;flex-basis:24px}
+.desktop-app .desktop-chrome .update-indicator{flex-shrink:0}
+.desktop-app.window-inactive .desktop-wordmark,.desktop-app.window-inactive .desktop-song-search{opacity:.65}
+@media(max-width:1100px){.desktop-app .desktop-chrome{grid-template-columns:minmax(145px,1fr) minmax(170px,300px) minmax(130px,1fr);gap:12px}.desktop-context{display:none}}
+@media(max-width:850px){.desktop-app .desktop-chrome{grid-template-columns:145px minmax(125px,1fr) 98px;gap:9px;padding-left:12px}.desktop-app .desktop-chrome .connection-chip .account-identity,.desktop-app .desktop-chrome .account-chevron,.desktop-song-search kbd{display:none}.desktop-app .desktop-chrome .connection-chip{max-width:36px;padding:4px}.desktop-app .desktop-chrome .connection-chip:not(.has-profile){max-width:36px;overflow:hidden}.desktop-app .desktop-chrome .connection-dot{flex-shrink:0}}
+@media(forced-colors:active){.desktop-app .desktop-song-search{border-color:ButtonText}.desktop-app .desktop-chrome{border-color:CanvasText}}
+
+.shared-import{display:flex;justify-content:center;margin-top:12px;position:relative;font-size:11px;text-align:center;min-height:40px;align-items:center}.shared-preview{width:min(500px,calc(100vw - 32px));padding:28px;border:1px solid var(--line);border-radius:16px;background:var(--canvas);color:var(--ink)}.shared-preview::backdrop{background:#0008}.shared-preview ol{padding-left:22px;max-height:280px;overflow:auto;font-size:13px;line-height:1.8}.shared-preview .connect-row{justify-content:flex-end}.shared-preview .primary{width:auto;margin:0;padding:10px 16px}.shared-preview p{line-height:1.6}
+
+/* YouTube transfer review */
+.youtube-launch{margin-left:8px}.youtube-nav{border:0;background:transparent;font:inherit;text-align:left;width:100%}
+.youtube-dialog{width:min(850px,calc(100vw - 32px));max-height:calc(100dvh - 64px);padding:28px;border:1px solid var(--line);border-radius:16px;background:var(--canvas);color:var(--ink);overflow:auto}
+.youtube-dialog::backdrop{background:#0009}.youtube-heading{display:flex;align-items:flex-start;gap:24px;justify-content:space-between}.youtube-heading p{margin:8px 0;color:var(--muted);font-size:13px;line-height:1.6}.youtube-setup{padding:14px 0;border-block:1px solid var(--line);font-size:13px;line-height:1.7}.youtube-setup summary{font-weight:600}.youtube-config-label{position:relative;display:inline-flex;min-height:40px;align-items:center;font-size:12px}.youtube-actions{flex-wrap:wrap;margin:16px 0}.youtube-matches{padding-left:24px;max-height:360px;overflow:auto;margin-block:18px}.youtube-matches li{padding:12px 8px 12px 2px;border-bottom:1px solid var(--line);font-size:12px}.youtube-matches strong{display:block;line-height:1.5;margin-bottom:7px;font-weight:550}.youtube-matches select{font-size:12px;min-height:36px;padding:7px 10px}.youtube-matches a{display:inline-block;margin-top:6px;font-size:11px}.youtube-save-fields{display:grid;grid-template-columns:1fr 220px;gap:16px}.youtube-confirm{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.6;font-weight:400;margin-top:20px}.youtube-confirm input{width:17px;height:17px;min-height:17px;margin:1px 0 0;flex-shrink:0;accent-color:var(--accent)}#youtube-status{font-size:13px;line-height:1.6;overflow-wrap:anywhere}.youtube-dialog .primary{margin-top:12px}
+@media(max-width:650px){.youtube-dialog{padding:20px}.youtube-save-fields{grid-template-columns:1fr}.youtube-launch{margin:8px 0 0}.youtube-heading h2{font-size:19px}}

@@ -481,6 +481,18 @@ const originalBuild=E.build;E.build=function(collection,options={}){if(!seed)ret
 (()=>{const mode=document.getElementById('discovery-mode'),make=document.getElementById('make');
 
  let busy=false,revision=0;
+ if(window.addEventListener)window.addEventListener('studio-playlist-import',()=>{revision++;});
+ const similarCache=new Map();
+ let recent=[];try{const saved=JSON.parse(localStorage.getItem('studio-recent-recommendations')||'[]');if(Array.isArray(saved))recent=saved.filter(x=>typeof x==='string').slice(-300);}catch{}
+ async function loadSimilar(song){
+  const key=E.norm(song.artists?.[0]||song.artist)+'\0'+E.norm(song.title),cached=similarCache.get(key);
+  if(cached&&Date.now()-cached.time<1800000)return cached.tracks;
+  const response=await fetch('/api/similar?'+new URLSearchParams({artist:song.artists?.[0]||song.artist,track:song.title}),{signal:AbortSignal.timeout(12000)});
+  if(!response.ok)throw Error('Recommendation service unavailable');
+  const data=await response.json(),tracks=Array.isArray(data.tracks)?data.tracks:[];
+  if(similarCache.size>=24)similarCache.delete(similarCache.keys().next().value);
+  similarCache.set(key,{time:Date.now(),tracks});return tracks;
+ }
 
  const available=()=>{if(mode.value==='discover'&&make.disabled!==busy)make.disabled=busy;};
 
@@ -514,37 +526,38 @@ const originalBuild=E.build;E.build=function(collection,options={}){if(!seed)ret
 
     try{
 
-     const response=await fetch('/api/similar?'+new URLSearchParams({artist:seed.artists?.[0]||seed.artist,track:seed.title}),{signal:AbortSignal.timeout(12000)});
+     const pool=await E.similarPool(seed,loadSimilar);
+     if(ticket!==revision||window.studioSeed!==seed)return;
+     const candidates=E.selectSimilar(pool,{count:100,recent});
+     const artistCounts=new Map(),uris=new Set();let attempts=0;
+     for(const candidate of candidates){
 
-     if(!response.ok)throw Error('Recommendation service unavailable');
-
-     const data=await response.json();
-
-     for(const candidate of data.tracks||[]){
-
-      if(ticket!==revision)return;if(found.length>=count)break;
+      if(ticket!==revision||window.studioSeed!==seed)return;if(found.length>=count||attempts>=Math.min(100,count*4))break;
+      if((artistCounts.get(E.norm(candidate.artist))||0)>=3)continue;
+      attempts++;
 
       const key=E.norm(candidate.artist)+'\0'+E.norm(candidate.title);
 
-      if(seen.has(key)||E.norm(candidate.title)===E.norm(seed.title))continue;
+      if(seen.has(key))continue;
 
       const familiar=summary.tracks.find(t=>t.key===key);
 
       if(/^spotify:track:[a-zA-Z0-9]{22}$/.test(familiar?.uri||'')){
 
-       seen.add(key);found.push({...familiar,reason:'Similar track suggested by Last.fm',sourceUrl:candidate.url});continue;
+       if(uris.has(familiar.uri))continue;uris.add(familiar.uri);seen.add(key);artistCounts.set(E.norm(candidate.artist),(artistCounts.get(E.norm(candidate.artist))||0)+1);found.push({...familiar,reason:'Listener similarity to your starting song',sourceUrl:candidate.url});continue;
 
       }
 
       status.textContent='Matching songs on Spotify - '+found.length+' found.';
 
-      const results=await SpotifyConnection.api('/search?'+new URLSearchParams({q:'track:'+candidate.title+' artist:'+candidate.artist,type:'track',limit:5}));
+      let results;try{results=await SpotifyConnection.api('/search?'+new URLSearchParams({q:'track:'+candidate.title+' artist:'+candidate.artist,type:'track',limit:5}));}catch{continue;}
+      if(ticket!==revision||window.studioSeed!==seed)return;
 
       const match=results.tracks?.items?.find(t=>E.norm(t.name)===E.norm(candidate.title)&&t.artists.some(a=>E.norm(a.name)===E.norm(candidate.artist)));
 
-      if(!match)continue;seen.add(key);
+      if(!match||uris.has(match.uri))continue;seen.add(key);uris.add(match.uri);artistCounts.set(E.norm(candidate.artist),(artistCounts.get(E.norm(candidate.artist))||0)+1);
 
-      found.push({key,title:match.name,artist:match.artists.map(a=>a.name).join(', '),uri:match.uri,reason:'Similar track suggested by Last.fm',sourceUrl:candidate.url});
+      found.push({key,title:match.name,artist:match.artists.map(a=>a.name).join(', '),uri:match.uri,reason:'Listener similarity to your starting song',sourceUrl:candidate.url});
 
      }
 
@@ -556,6 +569,8 @@ const originalBuild=E.build;E.build=function(collection,options={}){if(!seed)ret
 
    if(!found.length){local=true;found.push(...E.fromCollection(summary,seed,{count,labels:typeof labels==='undefined'?{}:labels}));}
 
+   if(window.studioSeed!==seed)return;
+   if(!local){recent=[...recent,...found.map(t=>t.key)].slice(-300);try{localStorage.setItem('studio-recent-recommendations',JSON.stringify(recent));}catch{}}
    playlist=found;if(!local)demo=false;render();
 
    document.getElementById('title').textContent=local?'A mix from your collection':'Discover something new';
@@ -590,7 +605,15 @@ if(globalThis.studioDesktop){
 
  const name=document.createElement('span');name.textContent='Playlist Studio';brand.append(mark,name);
 
- const header=document.querySelector('.app-header');chrome.append(brand,header);document.body.prepend(chrome);
+ const header=document.querySelector('.app-header');
+ const search=document.createElement('button');search.type='button';search.className='desktop-song-search';search.setAttribute('aria-label','Find a starting song (Control K)');
+ search.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span>Find a starting song</span><kbd>Ctrl K</kbd>';
+ search.addEventListener('click',()=>document.getElementById('open-music-picker').click());
+ document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'&&!event.repeat){event.preventDefault();if(!document.querySelector('dialog[open]'))search.click();}});
+ const context=document.createElement('span');context.className='desktop-context';context.textContent='Create a mix';brand.append(context);
+ chrome.setAttribute('aria-label','Application title bar');chrome.append(brand,search,header);document.body.prepend(chrome);
+ const updateFocus=()=>document.documentElement.classList.toggle('window-inactive',!document.hasFocus());
+ window.addEventListener('focus',updateFocus);window.addEventListener('blur',updateFocus);updateFocus();
 
  let appearance;const syncChrome=()=>{const next=document.documentElement.dataset.appearance==='dark'?'dark':'light';if(next===appearance)return;appearance=next;globalThis.studioDesktop.setAppearance?.(next).catch(()=>{});};
 

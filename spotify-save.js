@@ -25,7 +25,7 @@
    try{saved=JSON.parse(sessionStorage.getItem(savedKey));}catch{}
    if(saved?.fingerprint!==fingerprint)saved=null;
    if(!saved){status.textContent='Creating your private playlist…';const created=await S.api('/me/playlists',{method:'POST',body:JSON.stringify({name,public:false,description:'Created locally with My Playlist Studio.'})});saved={id:created.id,fingerprint,complete:false};sessionStorage.setItem(savedKey,JSON.stringify(saved));}
-   if(!saved.complete){await S.api('/playlists/'+encodeURIComponent(saved.id)+'/items',{method:'PUT',body:JSON.stringify({uris:unique})});saved.complete=true;sessionStorage.setItem(savedKey,JSON.stringify(saved));}
+   if(!saved.complete){for(let offset=0;offset<unique.length;offset+=100){status.textContent='Saving songs '+(offset+1)+'-'+Math.min(offset+100,unique.length)+' of '+unique.length+'.';await S.api('/playlists/'+encodeURIComponent(saved.id)+'/items',{method:offset===0?'PUT':'POST',body:JSON.stringify({uris:unique.slice(offset,offset+100)})});}saved.complete=true;sessionStorage.setItem(savedKey,JSON.stringify(saved));}
    status.replaceChildren(document.createTextNode('Saved '+unique.length+' songs to Spotify. '));const a=document.createElement('a');a.textContent='Open your playlist ↗';a.href='https://open.spotify.com/playlist/'+encodeURIComponent(saved.id);a.target='_blank';a.rel='noopener noreferrer';status.append(a);
   }catch(e){status.textContent=e.message+(saved&&!saved.complete?' Your playlist exists; click Save again to finish without duplicating songs.':'');}finally{saving=false;window.studioSaving=false;update();}
  };

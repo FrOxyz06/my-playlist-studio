@@ -118,3 +118,21 @@ Release workflow: an explicit [release] commit on main, a matching version tag, 
 
 
 Version 1.0.10 replaces the manual update link with a header indicator visible only when an update is available. Startup checks and six-hour checks are silent; downloading and installing still require explicit approval. Last.fm settings now loads the saved key into a password field; Show reveals it through a same-origin JSON request. Ordinary GET status responses still never include credentials.
+
+
+### Similarity selection (1.0.11)
+Discovery expands the starting song through up to four strong recommendations from distinct artists. Indirect scores are discounted and remain anchored to the original song. The selector uses Last.fm listener similarity rather than play counts, excludes weak connections, caps each artist at three songs, and modestly reduces recent recommendations. Recommendations are cached in memory for 30 minutes; the last 300 recommendation keys are stored locally. This is not audio analysis. Spotify matching remains exact and results can be shorter when evidence or matches are insufficient.
+
+
+### Sharing playlists (1.0.13)
+Export for a friend creates a .playlist.json file from the current mix. Import shared playlist previews the name and songs before replacing the current mix. Track order is preserved, up to 5,000 songs are supported, and history and credentials are excluded. This release does not convert to YouTube or import Spotify playlist URLs. YouTube conversion needs a separate OAuth/API integration.
+
+
+### YouTube transfer (1.0.14)
+Choose Convert to YouTube after generating a mix or importing a shared playlist. YouTube transfer is also accessible in the sidebar. Load the Google Desktop OAuth client JSON under One-time Google setup, connect YouTube in the system browser, then find matches. Each click searches the next 50 unmatched songs. Review the selected recordings, choose visibility (private by default), and confirm before creating the playlist. Skipped or unmatched songs are excluded; selected songs keep their source order. Repeated songs remain repeated.
+
+Google setup requires a Google Cloud project with YouTube Data API v3 enabled, a configured OAuth consent screen, and a Desktop app OAuth client. While the project is in testing, the account signing in must be an authorized test user. Download that client's JSON and load it inside the app. Do not paste account passwords into Playlist Studio. App client configuration is encrypted with Windows secure storage. Google access tokens stay in the main process memory, never go into renderer storage, and are discarded when the app closes or disconnects. After token expiry, sign in again. For sharing this build, the developer still needs to configure and distribute an appropriate Google client; no production Google client is bundled.
+
+Google API quotas apply. The app stops on quota errors and retains its current review while the window stays open. Interrupted playlist saves reconcile the existing video sequence before retrying, avoiding repeated inserts after a lost acknowledgement. If playlist creation itself has an unknown outcome, the app asks the user to check YouTube and does not automatically create a second playlist. Do not alter the review after a partially saved playlist; retry the same plan. Match review and save progress are session-only and are not restored after closing the app. Automated tests use simulated Google and YouTube responses; live end-to-end authorization requires an actual configured Google client and account.
+
+Documentation: https://developers.google.com/identity/protocols/oauth2/native-app and https://developers.google.com/youtube/v3/docs/

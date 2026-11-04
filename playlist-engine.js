@@ -27,5 +27,48 @@ function fromCollection(summary,seed,{count=25,labels={},random=Math.random}={})
  }
  return result;
 }
-const api={parse,summarize,build,fromCollection,url,csv,norm};if(typeof module!=='undefined')module.exports=api;else root.StudioEngine=api;
+// Similarity is a listener-derived signal, not an audio measurement.
+const songKey=t=>norm(t.artist)+'\0'+norm(t.title);
+async function similarPool(seed,load){
+ const primary=await load(seed),pool=new Map(),seedKey=songKey({...seed,artist:seed.artists?.[0]||seed.artist});
+ function add(track,similarity,direct){
+  const key=songKey(track);
+  if(!norm(track.title)||!norm(track.artist)||key===seedKey||!Number.isFinite(similarity)||similarity<=0)return;
+  const old=pool.get(key);
+  if(!old||similarity>old.similarity)pool.set(key,{...track,key,similarity,direct});
+ }
+ for(const t of primary)add(t,Math.min(1,Math.max(0,Number(t.match))),true);
+ // Expand only one hop through strong, distinct artists to avoid drifting away.
+ const anchors=[],artists=new Set();
+ for(const t of [...pool.values()].sort((a,b)=>b.similarity-a.similarity)){
+  if(t.similarity<.35||artists.has(norm(t.artist)))continue;
+  anchors.push(t);artists.add(norm(t.artist));if(anchors.length===4)break;
+ }
+ const branches=await Promise.allSettled(anchors.map(t=>load(t)));
+ branches.forEach((branch,i)=>{
+  if(branch.status==='fulfilled')for(const t of branch.value)add(t,.65*anchors[i].similarity*Math.min(1,Math.max(0,Number(t.match))),false);
+ });
+ return [...pool.values()];
+}
+function selectSimilar(tracks,{count=25,recent=[],random=Math.random}={}){
+ count=Math.max(1,Math.min(100,Math.floor(Number(count)||25)));
+ const unique=new Map();
+ for(const t of tracks){if(!(t.similarity>0))continue;const key=songKey(t),old=unique.get(key);if(!old||t.similarity>old.similarity)unique.set(key,{...t,key});}
+ const best=Math.max(0,...[...unique.values()].map(t=>t.similarity));
+ // Weak connections cannot fill the playlist just to reach the requested length.
+ const candidates=[...unique.values()].filter(t=>t.similarity>=Math.max(.08,best*.15));
+ const recentSet=new Set(recent),counts=new Map(),result=[];
+ while(candidates.length&&result.length<count){
+  let chosen=-1,highest=-Infinity;
+  candidates.forEach((t,i)=>{
+   const used=counts.get(norm(t.artist))||0;if(used>=3)return;
+   const score=t.similarity*(.85+.3*random())/(1+used*.45)*(recentSet.has(t.key)?.82:1);
+   if(score>highest){highest=score;chosen=i;}
+  });
+  if(chosen<0)break;
+  const [next]=candidates.splice(chosen,1);result.push(next);counts.set(norm(next.artist),(counts.get(norm(next.artist))||0)+1);
+ }
+ return result;
+}
+const api={parse,summarize,build,fromCollection,similarPool,selectSimilar,url,csv,norm};if(typeof module!=='undefined')module.exports=api;else root.StudioEngine=api;
 })(globalThis);
