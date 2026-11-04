@@ -44,7 +44,9 @@ window.webContents.on('will-navigate',(event,url)=>{if(new URL(url).origin!==ori
 window.webContents.session.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));
 server.on('desktop-callback',url=>{if(window&&!window.isDestroyed()){window.loadURL(origin+'/'+new URL(url,origin).search);window.show();window.focus();}});
 Menu.setApplicationMenu(null);
-const updates=require('./updates.cjs').setupUpdates({updater:require('electron-updater').autoUpdater,dialog,getWindow:()=>window,log,enabled:app.isPackaged,silentStartup:true});
+const updateDialog=require('./update-dialog.cjs').createUpdateDialog();
+const updates=require('./updates.cjs').setupUpdates({updater:require('electron-updater').autoUpdater,dialog:updateDialog,getWindow:()=>window,log,enabled:app.isPackaged,silentStartup:true});
+ipcMain.handle('updates:respond',(event,id,response)=>{trusted(event);return updateDialog.respond(id,response);});
 ipcMain.handle('updates:status',event=>{trusted(event);return updates.status();});
 ipcMain.handle('updates:check',event=>{trusted(event);return updates.check(true);});
 await window.loadURL(origin+'/');window.show();window.focus();log.info('Workspace loaded');

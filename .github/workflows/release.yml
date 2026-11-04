@@ -59,7 +59,7 @@ jobs:
           } elseif ($tagSha -ne $env:GITHUB_SHA) { throw 'Release tag points to a different commit' }
           $draft = gh release view $tag --json isDraft --jq '.isDraft' 2>$null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $tag --draft --verify-tag --title "Playlist Studio $version" --notes 'YouTube playlist conversion, playlist file sharing, broader similarity-based discovery, and an improved window toolbar. YouTube conversion requires one-time Google OAuth setup in the app.'
+            gh release create $tag --draft --verify-tag --title "Playlist Studio $version" --notes-file RELEASE_NOTES.md
             if ($LASTEXITCODE -ne 0) { throw 'Could not create draft release' }
           } elseif ($draft -ne 'true') { throw 'This release is already published; do not overwrite it' }
           foreach ($name in @("Playlist-Studio-Setup-$version.exe", "Playlist-Studio-Setup-$version.exe.blockmap", 'latest.yml')) {

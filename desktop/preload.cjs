@@ -1,4 +1,5 @@
 'use strict';
 const {contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('studioUpdateDialog',Object.freeze({onPrompt:callback=>{const listener=(_event,data)=>callback(data);ipcRenderer.on('updates:prompt',listener);return ()=>ipcRenderer.removeListener('updates:prompt',listener);},respond:(id,response)=>ipcRenderer.invoke('updates:respond',id,response)}));
 contextBridge.exposeInMainWorld('studioYouTube',Object.freeze({call:(action,value)=>ipcRenderer.invoke('youtube:action',action,value)}));
 contextBridge.exposeInMainWorld('studioDesktop',Object.freeze({getUpdateStatus:()=>ipcRenderer.invoke('updates:status'),loadAccounts:()=>ipcRenderer.invoke('accounts:load'),saveAccounts:list=>ipcRenderer.invoke('accounts:save',list),checkForUpdates:()=>ipcRenderer.invoke('updates:check'),setAppearance:appearance=>ipcRenderer.invoke('chrome:appearance',appearance),loadSession:()=>ipcRenderer.invoke('session:load'),saveSession:data=>ipcRenderer.invoke('session:save',data),clearSession:()=>ipcRenderer.invoke('session:clear')}));

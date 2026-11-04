@@ -15,6 +15,7 @@
  async function call(action,value){if(!globalThis.studioYouTube)throw Error('YouTube conversion is available in the desktop app. Open the updated Playlist Studio build.');const result=await studioYouTube.call(action,value);if(!result.ok)throw Error(result.error);return result.value;}
  function selected(){return rows.map(row=>row.selected).filter(Boolean);}
  function sync(){
+  window.studioYouTubeBusy=busy;
   const count=selected().length;$y('summary').textContent=count+' of '+tracks.length+' songs selected. Songs without a selected match will be skipped. Original order is preserved.';
   $y('create').disabled=busy||!connected||!count||!$y('reviewed').checked||completed;
   $y('match').disabled=busy||!connected||!tracks.length||locked||rows.every(row=>row.done);
