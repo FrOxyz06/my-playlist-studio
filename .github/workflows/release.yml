@@ -26,8 +26,45 @@ jobs:
           if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw "Tag must match package.json version" }
       - run: npm ci
       - run: npm test
-      - name: Build and publish Windows release
-        run: npx electron-builder --win nsis --x64 --publish always
+      - name: Build Windows installer without publishing
+        run: npx electron-builder --win nsis --x64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify updater artifacts
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $installer = "Playlist-Studio-Setup-$version.exe"
+          foreach ($name in @($installer, "$installer.blockmap", 'latest.yml')) {
+            if (!(Test-Path -LiteralPath "dist/$name")) { throw "Missing release artifact: $name" }
+            if ((Get-Item -LiteralPath "dist/$name").Length -eq 0) { throw "Empty release artifact: $name" }
+          }
+          $metadata = Get-Content dist/latest.yml -Raw
+          if ($metadata -notmatch "(?m)^version: $([regex]::Escape($version))\r?$") { throw 'Wrong update version' }
+          if (!$metadata.Contains($installer)) { throw 'Installer filename does not match update metadata' }
+          $stream = [IO.File]::OpenRead((Resolve-Path "dist/$installer"))
+          try { $sha = [Convert]::ToBase64String([Security.Cryptography.SHA512]::Create().ComputeHash($stream)) } finally { $stream.Dispose() }
+          if (!$metadata.Contains($sha)) { throw 'Installer checksum does not match update metadata' }
+      - name: Upload complete draft and publish
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $tag = "v$version"
+          $tagSha = gh api "repos/$env:GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.sha' 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh api --method POST "repos/$env:GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$tag" -f "sha=$env:GITHUB_SHA" | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'Could not create release tag' }
+          } elseif ($tagSha -ne $env:GITHUB_SHA) { throw 'Release tag points to a different commit' }
+          $draft = gh release view $tag --json isDraft --jq '.isDraft' 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --draft --verify-tag --title "Playlist Studio $version" --notes 'YouTube playlist conversion, playlist file sharing, broader similarity-based discovery, and an improved window toolbar. YouTube conversion requires one-time Google OAuth setup in the app.'
+            if ($LASTEXITCODE -ne 0) { throw 'Could not create draft release' }
+          } elseif ($draft -ne 'true') { throw 'This release is already published; do not overwrite it' }
+          foreach ($name in @("Playlist-Studio-Setup-$version.exe", "Playlist-Studio-Setup-$version.exe.blockmap", 'latest.yml')) {
+            gh release upload $tag "dist/$name" --clobber
+            if ($LASTEXITCODE -ne 0) { throw "Upload failed: $name" }
+          }
+          gh release edit $tag --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Could not publish completed release' }
