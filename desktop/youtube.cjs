@@ -16,7 +16,7 @@ function rank(song,video){
  if(song.durationMs&&d&&Math.abs(Number(d[1]||0)*3600+Number(d[2]||0)*60+Number(d[3]||0)-song.durationMs/1000)>20)score-=.25;
  return Math.max(0,Math.min(1,score));
 }
-function createYouTube({fetch:request=globalThis.fetch,openExternal,loadConfig=async()=>null,saveConfig=async()=>{},makeServer=http.createServer,authTimeout=180000}={}){
+function createYouTube({fetch:request=globalThis.fetch,openExternal,loadConfig=async()=>null,saveConfig=async()=>{},makeServer=http.createServer,authTimeout=180000,wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
  let config=null,token=null,expires=0,channel=null,auth=null,job=null,busy=false,generation=0;
  async function initialize(){if(!config){const saved=await loadConfig();if(saved)config=parseConfig({installed:saved});}}
  async function status(){await initialize();return {configured:!!config,connected:!!token&&Date.now()<expires,channel:channel?.title||null};}
@@ -24,7 +24,19 @@ function createYouTube({fetch:request=globalThis.fetch,openExternal,loadConfig=a
  async function api(endpoint,params={},body){
   if(!token||Date.now()>=expires)throw Error('Connect YouTube again; your session has expired.');
   let response;try{response=await request('https://www.googleapis.com/youtube/v3/'+endpoint+'?'+new URLSearchParams(params),{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(20000)});}catch{throw Error('YouTube could not be reached. Try again when your connection returns.');}
-  const data=await response.json();if(!response.ok){const reason=data.error?.errors?.[0]?.reason,e=Error(reason==='quotaExceeded'||reason==='dailyLimitExceeded'?'YouTube API quota reached. Your matches are kept while this window stays open.':response.status===401?'Connect YouTube again; authorization has expired.':'YouTube request failed'+(reason?' ('+reason+')':'')+'.');e.status=response.status;throw e;}return data;
+  const data=await response.json();if(!response.ok){const reason=data.error?.errors?.[0]?.reason,e=Error(reason==='quotaExceeded'||reason==='dailyLimitExceeded'?'YouTube API quota reached. Your matches are kept while this window stays open.':response.status===401?'Connect YouTube again; authorization has expired.':'YouTube request failed'+(reason?' ('+reason+')':'')+'.');e.status=response.status;e.reason=reason;throw e;}return data;
+ }
+ // Retry only explicit playlist-not-found responses; network failures may have committed a write.
+ async function playlistRequest(params,body){
+  const delays=[500,1500,3000];
+  for(let attempt=0;;attempt++){
+   try{return await api('playlistItems',params,body);}
+   catch(error){
+    if(error.status!==404||error.reason!=='playlistNotFound')throw error;
+    if(attempt>=delays.length){error.message='YouTube cannot find the created playlist yet. Check that it exists in this YouTube account, then retry. No replacement playlist was created.';throw error;}
+    await wait(delays[attempt]);
+   }
+  }
  }
  async function connect(){
   await initialize();if(!config)throw Error('Load a Google Desktop OAuth JSON in YouTube setup first.');if(auth||busy)throw Error('A YouTube action is already in progress.');
@@ -79,14 +91,23 @@ function createYouTube({fetch:request=globalThis.fetch,openExternal,loadConfig=a
     job={fingerprint,uncertain:true};let created;
     try{created=await api('playlists',{part:'snippet,status'},{snippet:{title:name.trim(),description:'Created with Playlist Studio'},status:{privacyStatus:privacy}});}catch(error){if(error.status)job=null;else throw Error('Playlist creation could not be confirmed. Check your YouTube playlists before starting another session.');throw error;}
     if(!created.id)throw Error('Playlist creation could not be confirmed. Check YouTube before starting another session.');
-    job={fingerprint,id:created.id,complete:false};
+    job={fingerprint,id:created.id,complete:false,needsReconcile:false};
    }
    if(job.uncertain)throw Error('Playlist creation is uncertain. Check YouTube before starting another session.');
    if(!job.complete){
     const existing=[];let pageToken;
-    do{const page=await api('playlistItems',{part:'contentDetails',playlistId:job.id,maxResults:'50',...(pageToken?{pageToken}:{})});existing.push(...(page.items||[]).map(t=>t.contentDetails.videoId));pageToken=page.nextPageToken;if(existing.length>5000)throw Error('The YouTube playlist changed. Check it before continuing.');}while(pageToken);
+    if(job.needsReconcile)do{const page=await playlistRequest({part:'contentDetails',playlistId:job.id,maxResults:'50',...(pageToken?{pageToken}:{})});existing.push(...(page.items||[]).map(t=>t.contentDetails.videoId));pageToken=page.nextPageToken;if(existing.length>5000)throw Error('The YouTube playlist changed. Check it before continuing.');}while(pageToken);
     if(existing.some((id,i)=>ids[i]!==id))throw Error('The YouTube playlist changed. Check it before continuing.');
-    for(let i=existing.length;i<ids.length;i++)await api('playlistItems',{part:'snippet'},{snippet:{playlistId:job.id,position:i,resourceId:{kind:'youtube#video',videoId:ids[i]}}});
+    for(let i=existing.length;i<ids.length;i++){
+     try{
+      await playlistRequest({part:'snippet'},{snippet:{playlistId:job.id,position:i,resourceId:{kind:'youtube#video',videoId:ids[i]}}});
+      job.needsReconcile=true;
+     }catch(error){
+      // Preserve reconciliation after successful writes or any ambiguous failure.
+      if(!error.status||error.status>=500)job.needsReconcile=true;
+      throw error;
+     }
+    }
     job.complete=true;
    }
    return {url:'https://www.youtube.com/playlist?list='+encodeURIComponent(job.id),count:ids.length};

@@ -1,9 +1,8 @@
-## Playlist Studio 1.0.19
+## Playlist Studio 1.0.20
 
-- Reorganized YouTube transfer into a connection panel and a match/review/save workspace.
-- Added a visible connection state and collapsible Google setup instructions that close after configuration is loaded.
-- Disabled Google sign-in until a configuration is loaded and kept unsearched song selectors inactive.
-- Refined Spotify and Last.fm settings with consistent spacing, input sizing, account cards, and feedback panels.
-- Preserved the Google callback crash fix and existing playlist transfer behavior.
+- Removed the unnecessary contents lookup before first populating a newly created YouTube playlist.
+- Added bounded retries for explicit playlistNotFound responses when reading or adding playlist items.
+- Preserved reconciliation after successful or uncertain writes so retrying does not blindly duplicate songs.
+- Missing playlists are never automatically replaced; quota and ambiguous network errors are not automatically retried.
 
-Validation: all 81 existing tests pass; UI JavaScript syntax, preserved control IDs, and stylesheet structure checked. Desktop visual review was stopped with Escape and remains unverified.
+Validation: all 87 automated tests pass, including six new checks for missing playlists, interrupted saves, bounded retries, and quota errors. Live YouTube playlist creation remains unverified.
