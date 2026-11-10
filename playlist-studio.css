@@ -157,3 +157,83 @@ main{max-width:1440px;width:100%;margin-inline:auto}
 @media(max-width:1100px){.mix-controls{padding:24px}.quantity-fields{align-items:flex-start}.playlist-filter{grid-template-columns:auto minmax(120px,1fr)}.filter-status{grid-column:2;text-align:left}}
 @media(max-width:700px){.mix-controls{padding:20px}.composer{border-radius:14px}.playlist-filter{padding:0 20px 16px;grid-template-columns:1fr;gap:7px}.filter-status{grid-column:1}.length-presets{flex-wrap:wrap}}
 .quantity-fields>.length-presets{max-width:none}
+
+/* Shared settings surfaces */
+.settings-eyebrow{display:block;font-size:9px;font-weight:650;letter-spacing:.12em;line-height:1.5;color:var(--muted);margin-bottom:8px}
+.settings-dialog-heading{padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:0}
+.settings-dialog-heading h2{font-size:25px;line-height:1.2;margin:0;letter-spacing:-.035em}
+.settings-dialog-heading p{max-width:52ch;margin:8px 0 0;font-size:12px}
+.settings-close{flex-shrink:0}
+.settings-service-icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:var(--paper);color:var(--accent);margin-bottom:22px}
+.settings-service-icon svg{width:23px;height:23px}
+.settings-state{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border:1px solid var(--line);border-radius:20px;font-size:10px;font-weight:600;color:var(--muted);background:var(--paper);margin:12px 0}
+.settings-state:before{content:'';width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.settings-state.is-connected{color:var(--accent);background:var(--accent-soft)}
+.settings-state.is-connected:before{background:var(--accent)}
+.settings-state.needs-setup{border-style:dashed}
+.settings-privacy-note{font-size:10px!important;line-height:1.7!important;color:var(--muted);padding-top:16px;margin:20px 0 0!important;border-top:1px solid var(--line)}
+.connection-dialog{padding:28px;border-radius:20px;width:min(560px,calc(100vw - 32px))}
+.connection-dialog .connection-close{min-height:32px;border-radius:8px}
+.connection-dialog .settings-title{padding:4px 0 20px;border-bottom:1px solid var(--line)}
+.connection-dialog .settings-title>.settings-icon{width:42px;height:42px;border:1px solid var(--line);background:var(--accent-soft);border-radius:13px;margin-bottom:18px}
+.connection-dialog .settings-title p{margin:8px 0 0;font-size:12px}
+.connection-dialog .spotify-login-help{margin:18px 0;font-size:12px}
+.connection-dialog .connect-row{gap:10px;align-items:center;flex-wrap:wrap}
+.connection-dialog .connect-row input{flex:1;min-width:160px}
+.connection-dialog input{min-height:44px}
+.connection-dialog .setup-guide{padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--canvas);margin-top:22px}
+.connection-dialog .setup-guide summary{font-size:11px;font-weight:600;line-height:1.6}
+.connection-dialog .spotify-account-row{padding:14px;border-radius:12px;gap:12px}
+.connection-dialog #lastfm-form{padding-top:20px}
+.connection-dialog #lastfm-form>label{margin-top:0}
+.connection-dialog #lastfm-form>.field-help{margin-top:10px;font-size:11px}
+.connection-dialog #lastfm-save{min-height:42px;width:100%;margin-top:20px}
+.connection-dialog #lastfm-feedback:empty,.connection-dialog #spotify-status:empty{display:none}
+.connection-dialog #lastfm-feedback:not(:empty),.connection-dialog #spotify-status:not(:empty){padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--canvas);margin-top:18px;font-size:12px}
+#lastfm-settings-title{padding-right:55px;font-size:23px;margin:4px 0 8px}
+#lastfm-settings>p{margin-bottom:0;font-size:12px}
+/* YouTube connection and transfer */
+.youtube-dialog{width:min(1040px,calc(100vw - 40px));max-height:calc(100dvh - 48px);padding:0;border-radius:20px;overflow:auto}
+.youtube-dialog>.youtube-heading{padding:26px 28px 22px;margin:0;gap:20px}
+.youtube-layout{display:grid;grid-template-columns:260px minmax(0,1fr);align-items:start}
+.youtube-account-panel{padding:24px;background:var(--canvas);border-right:1px solid var(--line);align-self:stretch;min-width:0}
+.youtube-account-panel h3{font-size:16px;letter-spacing:-.02em}
+.youtube-account-panel #youtube-account{font-size:11px;line-height:1.7;margin:0 0 12px;overflow-wrap:anywhere}
+.youtube-account-panel .youtube-actions{display:flex;flex-direction:column;align-items:stretch;gap:6px;margin:0}
+.youtube-account-panel .youtube-actions button{width:100%;min-height:40px}
+.youtube-setup{border:1px solid var(--line);border-radius:11px;background:var(--paper);padding:13px;margin-top:20px;font-size:11px}
+.youtube-setup summary{font-size:11px;font-weight:600;min-height:32px;line-height:1.6}
+.setup-summary-hint{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-left:14px}
+.youtube-setup>.field-help{margin:12px 0;font-size:11px}
+.youtube-setup .setup-steps{list-style:none;counter-reset:setup;display:grid;gap:15px;padding:0;margin:16px 0}
+.setup-steps li{counter-increment:setup;position:relative;padding-left:26px}
+.setup-steps li:before{content:counter(setup);position:absolute;left:0;top:0;width:18px;height:18px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-size:9px;color:var(--accent);background:var(--accent-soft)}
+.setup-steps strong{display:block;font-size:11px;line-height:1.6;margin-bottom:3px}
+.setup-steps span{display:block;font-size:10px;line-height:1.7;color:var(--muted)}
+.youtube-setup .youtube-config-label{display:flex;justify-content:center;width:100%;font-size:10px;min-height:38px;margin:0;padding:8px;white-space:normal;text-align:center}
+.youtube-transfer-panel{padding:24px 28px;min-width:0}
+.youtube-review-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.youtube-review-heading h3{font-size:17px}
+.youtube-review-heading .secondary{font-size:11px;min-height:38px;padding:8px 12px;flex-shrink:0}
+.youtube-transfer-panel #youtube-source{font-size:11px;line-height:1.6;margin:0 0 12px}
+.youtube-feedback:empty{display:none}
+.youtube-feedback:not(:empty){padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--canvas);font-size:12px!important;line-height:1.6;margin:12px 0;overflow-wrap:anywhere}
+.youtube-matches{margin:16px 0 20px;padding:0;list-style:none;counter-reset:tracks;max-height:280px;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;border-block:1px solid var(--line)}
+.youtube-matches li{counter-increment:tracks;position:relative;padding:14px 4px 14px 32px;border-bottom:1px solid var(--line)}
+.youtube-matches li:last-child{border-bottom:0}
+.youtube-matches li:before{content:counter(tracks,decimal-leading-zero);position:absolute;left:2px;top:16px;font-size:10px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.youtube-matches strong{font-size:12px;line-height:1.5;margin:0 0 2px}
+.youtube-track-artist{display:block;font-size:11px;color:var(--muted);margin-bottom:9px}
+.youtube-matches select{min-height:36px;font-size:11px;border-radius:8px}
+.youtube-matches a{font-size:10px;margin-top:8px}
+.youtube-save-panel{padding-top:4px}
+.youtube-save-fields{grid-template-columns:minmax(0,1fr) 165px;gap:14px;margin-top:14px}
+.youtube-save-fields label{font-size:11px;margin-top:0}
+.youtube-save-fields input,.youtube-save-fields select{min-height:42px;font-size:12px}
+.youtube-confirm{font-size:11px;line-height:1.7;margin:18px 0}
+.youtube-confirm input{margin-top:2px}
+.youtube-save-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:18px}
+.youtube-save-footer #youtube-summary{font-size:10px;line-height:1.65;margin:0;max-width:30ch}
+.youtube-save-footer .primary{width:auto;min-width:145px;min-height:42px;padding:10px 16px;font-size:12px;flex-shrink:0;margin:0}
+@media(max-width:850px){.youtube-dialog{width:calc(100vw - 28px)}.youtube-layout{grid-template-columns:220px minmax(0,1fr)}.youtube-account-panel{padding:20px}.youtube-transfer-panel{padding:20px}.youtube-review-heading{align-items:flex-start;flex-direction:column;gap:12px}.youtube-save-fields{grid-template-columns:1fr}.youtube-save-footer{align-items:stretch;flex-direction:column;gap:12px}.youtube-save-footer #youtube-summary{max-width:none}}
+@media(max-width:620px){.youtube-dialog{max-height:calc(100dvh - 24px);border-radius:15px}.youtube-dialog>.youtube-heading{padding:22px 20px 18px}.settings-dialog-heading h2{font-size:21px}.youtube-layout{grid-template-columns:1fr}.youtube-account-panel{border-right:0;border-bottom:1px solid var(--line)}.youtube-account-panel .settings-service-icon{display:none}.youtube-account-panel .youtube-actions{flex-direction:row;flex-wrap:wrap}.youtube-account-panel .youtube-actions button{width:auto}.youtube-account-panel .settings-privacy-note{margin-top:12px!important;padding-top:12px}.youtube-review-heading{flex-direction:row;align-items:center}.youtube-review-heading .secondary{max-width:130px}.youtube-save-fields{grid-template-columns:1fr}.youtube-matches{max-height:260px}.connection-dialog{padding:22px}}

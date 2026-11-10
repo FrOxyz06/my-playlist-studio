@@ -1,7 +1,9 @@
-## Playlist Studio 1.0.18
+## Playlist Studio 1.0.19
 
-- Fixed a main-process crash during Google/YouTube sign-in when late browser requests reached a closed callback server.
-- Late and duplicate callbacks now receive a safe response without exchanging the authorization code again.
-- Preserved callback host, path, and state validation.
+- Reorganized YouTube transfer into a connection panel and a match/review/save workspace.
+- Added a visible connection state and collapsible Google setup instructions that close after configuration is loaded.
+- Disabled Google sign-in until a configuration is loaded and kept unsearched song selectors inactive.
+- Refined Spotify and Last.fm settings with consistent spacing, input sizing, account cards, and feedback panels.
+- Preserved the Google callback crash fix and existing playlist transfer behavior.
 
-Validation: all 81 automated tests pass, including regression checks for late requests after successful and denied sign-in. Live Google authorization has not been verified in this session.
+Validation: all 81 existing tests pass; UI JavaScript syntax, preserved control IDs, and stylesheet structure checked. Desktop visual review was stopped with Escape and remains unverified.
