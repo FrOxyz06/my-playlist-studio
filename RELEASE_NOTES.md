@@ -1,9 +1,7 @@
-## Playlist Studio 1.0.17
+## Playlist Studio 1.0.18
 
-- Refined workspace spacing, selected controls, and playlist rows.
-- Added quick 10, 25, and 50-song playlist lengths.
-- Added search by song or artist within the generated mix without changing saved or exported tracks.
-- Made the starting-song label visible in both playlist row layouts.
-- Preserved the existing YouTube matching, review, and playlist-saving add-on.
+- Fixed a main-process crash during Google/YouTube sign-in when late browser requests reached a closed callback server.
+- Late and duplicate callbacks now receive a safe response without exchanging the authorization code again.
+- Preserved callback host, path, and state validation.
 
-Validation: 79 existing tests pass. Desktop visual review and live Google sign-in were not verified in this session.
+Validation: all 81 automated tests pass, including regression checks for late requests after successful and denied sign-in. Live Google authorization has not been verified in this session.

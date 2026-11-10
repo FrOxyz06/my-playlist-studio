@@ -3,14 +3,21 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=re
 const {createYouTube,parseConfig,rank}=require('../desktop/youtube.cjs');
 const config={installed:{client_id:'123-example.apps.googleusercontent.com',client_secret:'test-only'}};
 const ok=data=>({ok:true,status:200,json:async()=>data});
-function harness({wrongState=false,wrongScope=false,deny=false,failInsert=false,quota=false,creationUnknown=false}={}){
+function harness({wrongState=false,wrongScope=false,deny=false,failInsert=false,quota=false,creationUnknown=false,lateRequests=false}={}){
  let handler,authURL,tokenBody,creates=0,lost=failInsert;const stored=[],calls=[];
- const server={once(){return this;},listen(_port,_host,cb){cb();return this;},address(){return {port:41234};},close(){}};
+ let closed=false;
+ const server={once(){return this;},listen(_port,_host,cb){closed=false;cb();return this;},address(){return closed?null:{port:41234};},close(){closed=true;}};
  const service=createYouTube({makeServer:fn=>{handler=fn;return server;},openExternal:async url=>{
   authURL=new URL(url);
   const respond=state=>{const res={setHeader(){},writeHead(status){this.status=status;},end(){}};handler({method:'GET',headers:{host:'127.0.0.1:41234'},url:'/callback?'+new URLSearchParams({state,...(deny?{error:'access_denied'}:{code:'test-code'})})},res);return res;};
   if(wrongState)assert.equal(respond('incorrect').status,400);
   respond(authURL.searchParams.get('state'));
+  if(lateRequests){
+   assert.equal(respond(authURL.searchParams.get('state')).status,410);
+   const res={setHeader(){},writeHead(status){this.status=status;},end(){}};
+   handler({method:'GET',headers:{host:'127.0.0.1:41234'},url:'/favicon.ico'},res);
+   assert.equal(res.status,410);
+  }
  },fetch:async(url,options)=>{
   calls.push({url,options});
   if(url==='https://oauth2.googleapis.com/token'){tokenBody=new URLSearchParams(options.body);return ok({access_token:'never-return-this-token',expires_in:3600,scope:wrongScope?'profile':'https://www.googleapis.com/auth/youtube'});}
@@ -40,6 +47,17 @@ test('Google authorization validates state, uses PKCE and loopback, and never ex
 });
 for(const kind of ['deny','wrongScope'])test('authorization failure: '+kind,async()=>{
  const h=harness({[kind]:true});await h.service.configure(config);await assert.rejects(h.service.connect());assert.equal((await h.service.status()).connected,false);
+});
+
+test('late browser requests after callback shutdown do not crash or exchange the code again',async()=>{
+ const h=harness({lateRequests:true});await h.service.configure(config);
+ assert.equal((await h.service.connect()).connected,true);
+ assert.equal(h.calls.filter(call=>call.url==='https://oauth2.googleapis.com/token').length,1);
+});
+test('late browser requests after denied sign-in are contained',async()=>{
+ const h=harness({lateRequests:true,deny:true});await h.service.configure(config);
+ await assert.rejects(h.service.connect(),/cancelled or denied/);
+ assert.equal(h.calls.length,0);
 });
 test('matching ranks recording metadata above covers and accounts for duration',async()=>{
  const h=harness();await h.service.configure(config);await h.service.connect();const results=await h.service.search({title:'Song',artist:'Artist',durationMs:180000});

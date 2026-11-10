@@ -31,18 +31,23 @@ function createYouTube({fetch:request=globalThis.fetch,openExternal,loadConfig=a
   const previousChannel=channel?.id;
   const ticket=++generation,state=crypto.randomBytes(24).toString('base64url'),verifier=crypto.randomBytes(48).toString('base64url');token=null;
   auth=new Promise((resolve,reject)=>{
-   let timer,finished=false,redirect;
+   let timer,finished=false,redirect,callbackHost;
    const finish=(error,code)=>{if(finished)return;finished=true;clearTimeout(timer);server.close();error?reject(error):resolve({code,redirect});};
    const server=makeServer((req,res)=>{
+    if(finished){res.writeHead(410);return res.end('Google sign-in has finished. Return to Playlist Studio.');}
     const url=new URL(req.url,'http://127.0.0.1');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','text/plain; charset=utf-8');
-    if(req.method!=='GET'||req.headers.host!=='127.0.0.1:'+server.address().port||url.pathname!=='/callback'||url.searchParams.get('state')!==state){res.writeHead(400);return res.end('Invalid authorization response.');}
+    if(req.method!=='GET'||req.headers.host!==callbackHost||url.pathname!=='/callback'||url.searchParams.get('state')!==state){res.writeHead(400);return res.end('Invalid authorization response.');}
     const code=url.searchParams.get('code');res.end('Return to Playlist Studio. You can close this tab.');
     if(url.searchParams.has('error')||!code||code.length>4096)return finish(Error('Google sign-in was cancelled or denied.'));
     finish(null,code);
    });
    server.once('error',()=>finish(Error('Could not start the local Google sign-in callback.')));
    server.listen(0,'127.0.0.1',()=>{
-    redirect='http://127.0.0.1:'+server.address().port+'/callback';
+    const address=server.address();
+    if(finished)return;
+    if(!address||typeof address==='string')return finish(Error('Could not start the local Google sign-in callback.'));
+    callbackHost='127.0.0.1:'+address.port;
+    redirect='http://'+callbackHost+'/callback';
     const url='https://accounts.google.com/o/oauth2/v2/auth?'+new URLSearchParams({client_id:config.client_id,redirect_uri:redirect,response_type:'code',scope,state,code_challenge:crypto.createHash('sha256').update(verifier).digest('base64url'),code_challenge_method:'S256',prompt:'select_account'});
     Promise.resolve().then(()=>openExternal(url)).catch(()=>finish(Error('Could not open the browser for Google sign-in.')));
    });timer=setTimeout(()=>finish(Error('Google sign-in timed out. Try connecting again.')),authTimeout);timer.unref?.();
