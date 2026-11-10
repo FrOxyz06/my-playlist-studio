@@ -8,7 +8,7 @@ const request=(url,method='GET',host='127.0.0.1:8791')=>new Promise(resolve=>{
  server.emit('request',{url,method,headers:{host}},res);
 });
 test('local server restricts hosts, methods and files and sets security headers',async()=>{
- const page=await request('/');assert.equal(page.status,200);assert.match(page.body,/<title>My Playlist Studio/);assert.match(page.headers['Content-Security-Policy'],/frame-ancestors 'none'/);
+ const page=await request('/');assert.equal(page.status,200);assert.match(page.body,/<title>Playlist Studio<\/title>/);assert.match(page.headers['Content-Security-Policy'],/frame-ancestors 'none'/);
  assert.equal((await request('/callback?code=fake')).status,200);
  assert.equal((await request('/README.md')).status,404);
  assert.equal((await request('/','POST')).status,405);

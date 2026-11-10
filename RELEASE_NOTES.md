@@ -1,8 +1,9 @@
-## Playlist Studio 1.0.20
+## Playlist Studio 1.0.21
 
-- Removed the unnecessary contents lookup before first populating a newly created YouTube playlist.
-- Added bounded retries for explicit playlistNotFound responses when reading or adding playlist items.
-- Preserved reconciliation after successful or uncertain writes so retrying does not blindly duplicate songs.
-- Missing playlists are never automatically replaced; quota and ambiguous network errors are not automatically retried.
+- Standardized controls, typography, spacing, and dialog sizing across the workspace, song picker, account settings, YouTube transfer, exports, and update prompts.
+- Moved responsive rules after component styles and removed 269 overridden declarations.
+- Kept desktop dialogs below the title bar and improved compact-window layouts.
+- Fixed stale song artwork, broken fallback symbols, and sidebar selection when opening account dialogs.
+- Unified the window title as Playlist Studio.
 
-Validation: all 87 automated tests pass, including six new checks for missing playlists, interrupted saves, bounded retries, and quota errors. Live YouTube playlist creation remains unverified.
+Validation: all 87 automated tests pass. Frontend script syntax, stylesheet structure, breakpoint ordering, and unique markup IDs checked. The local desktop preview was launched successfully; a full visual review remains unverified.
